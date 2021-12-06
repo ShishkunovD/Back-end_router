@@ -25,19 +25,23 @@ app.get('/allTasks', (req, res) => {
 })
 
 app.post('/createTask', (req, res) => {
-  const task = new Task(req.body);
-  if(req.body.text === undefined || typeof req.body.isCheck !== "boolean") {
-    res.status(404).send("Error, all fields should be filled in correctly.");
+  if( req.body.text !== undefined ) {
+    if( typeof req.body.isCheck !== "boolean" ) {
+      res.status(404).send("Error, all fields should be filled in correctly.");
+    } else {
+      const task = new Task(req.body);
+      task.save().then(result => {
+        res.send({ data: result });
+      })
+    }
   } else {
-    task.save().then(result => {
-      res.send({ data: result });
-    })
+    res.status(404).send("Error, please enter the text.");
   }
 })
 
 app.delete('/deleteTask', (req, res) => {
   const identifier = req.query.id;
-  if(identifier === undefined) {
+  if( identifier === undefined ) {
     res.status(404).send("Error, please enter the id.");
   } else {
     Task.deleteOne({ _id : identifier })
@@ -50,13 +54,20 @@ app.delete('/deleteTask', (req, res) => {
 app.patch('/updateTask', (req, res) => {
   const params = req.query.id;
   const body = req.body;
-  if(body.text === undefined || params === undefined || typeof body.isCheck !== "boolean") {
-    res.status(404).send("Error, all fields should be filled.");
+  if( params !== undefined ) {
+    if( body.text !== undefined && typeof body.isCheck === "boolean" ) {
+      Task.findByIdAndUpdate(params, { text: body.text })
+      .then(result => {
+        Task.findByIdAndUpdate(params, { isCheck: body.isCheck })
+        .then(result => {
+          Task.find().then(result => res.send({ data: result }))
+        })
+      })
+    } else {
+      res.status(404).send("Error, all fields should be filled in correctly.");
+    }
   } else {
-    Task.findByIdAndUpdate(params, { text: body.text })
-    .then(result => {
-      Task.find().then(result => res.send({ data: result }))
-    })
+    res.status(404).send("Error, please enter the id.");
   }
 })
 
