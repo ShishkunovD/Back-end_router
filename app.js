@@ -20,54 +20,42 @@ app.use(express.json());
 
 app.get('/allTasks', (req, res) => {
   Task.find().then(result => {
-    res.send({data: result});
+    res.send({ data: result });
   })
 })
 
 app.post('/createTask', (req, res) => {
   const task = new Task(req.body);
   task.save().then(result => {
-    res.send({data: result});
+    res.send({ data: result });
   })
 })
 
 app.delete('/deleteTask', (req, res) => {
   const identifier = req.query.id;
   if(identifier === undefined) {
-    res.send("Пожалуйста, заполните id")
+    res.send("Пожалуйста, заполните id.");
   } else {
-    Task.deleteOne({_id : identifier})
+    Task.deleteOne({ _id : identifier })
     .then(result => {
-      console.log('Task deleted');
-    })
-    Task.find().then(result => {
-      res.send({data: result});
+      Task.find().then(result => res.send({ data: result }));
     })
   }
 })
 
 app.patch('/updateTask', (req, res) => {
   const params = req.query.id;
-  const body = req.body;
-  if(req.body.text === undefined) {
-    res.send("Пожалуйста, заполните текст")
+  const body = req.body.text;
+  if(body === undefined) {
+    res.send("Пожалуйста, заполните поле текста.");
+  } else if(params === undefined) {
+    res.send("Пожалуйста, заполните id.");
   } else {
-    Task.findByIdAndUpdate(params, { text: body.text })
+    Task.findByIdAndUpdate(params, { text: body })
     .then(result => {
-      console.log('Task was updated');
-    })
-    Task.find().then(result => {
-      res.send({data: result});
+      Task.find().then(result => res.send({ data: result }))
     })
   }
-})
-
-app.put('/changeCheckbox', (req, res) => {
-  const body = req.body;
-  const task = body._id;
-  Task.findByIdAndUpdate(task, {isCheck: body.isCheck}).then(result => {
-    res.send('Checkbox was changed');
-  })
 })
 
 app.listen('8000', () => {
